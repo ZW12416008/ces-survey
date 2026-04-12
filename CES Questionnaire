@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zhongshan Park CES Survey / 中山公园 CES 问卷</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #f5f7fa;
+      color: #222;
+    }
+    .page {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+    .map-panel {
+      flex: 1 1 60%;
+      position: relative;
+      background: #ddd;
+      min-height: 100vh;
+    }
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+    .toolbar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 999;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar button, .toolbar select {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .toolbar button {
+      background: #1677ff;
+      color: #fff;
+      cursor: pointer;
+    }
+    .toolbar button.secondary {
+      background: #555;
+    }
+    .toolbar .lang-select {
+      background: #fff;
+      color: #222;
+      min-width: 146px;
+      cursor: pointer;
+    }
+    .test-toggle-wrap {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.96);
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      font-size: 13px;
+      color: #222;
+    }
+    .test-toggle-wrap input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .side-panel {
+      flex: 0 0 560px;
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+    h2 {
+      margin: 22px 0 10px;
+      font-size: 18px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+    }
+    .desc, .status, .scale-note, .question-note, .lang-note {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #555;
+    }
+    .status {
+      background: #f3f6fb;
+      border: 1px solid #dbe5f2;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 14px 0;
+    }
+    .scale-note, .question-note, .lang-note {
+      background: #fafcff;
+      border: 1px solid #e6ebf2;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 6px;
+    }
+    .field {
+      margin-bottom: 14px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #cfd8e3;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
+    }
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+    .option-group {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .option-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .option-inline label,
+    .option-group label {
+      font-weight: normal;
+      font-size: 14px;
+    }
+    .inline-other {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .inline-other input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+    }
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    .matrix th, .matrix td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .matrix th:first-child,
+    .matrix td:first-child,
+    .matrix th:last-child,
+    .matrix td:last-child {
+      text-align: left;
+      min-width: 140px;
+    }
+    .matrix .small {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .submit-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .submit-row button {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .primary { background: #16a34a; color: white; }
+    .light { background: #eef2f7; color: #333; }
+    .danger { background: #ef4444; color: #fff; }
+
+    .recent {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid #eee;
+    }
+    .recent-item {
+      border: 1px solid #e6ebf2;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fafcff;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .consent-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5000;
+    }
+    .consent-box {
+      width: min(760px, 92vw);
+      max-height: 86vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .consent-box h2 {
+      margin-top: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .consent-content {
+      font-size: 14px;
+      line-height: 1.9;
+      color: #333;
+      margin: 12px 0 16px;
+      white-space: pre-line;
+    }
+
+    .hidden { display: none !important; }
+
+
+    .display-banner {
+      margin: 14px 0;
+      background: #fff7e6;
+      border: 1px solid #f5d08a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #7a4b00;
+    }
+    .placeholder-box {
+      border: 1px dashed #cfd8e3;
+      border-radius: 10px;
+      padding: 18px;
+      background: #fafcff;
+      color: #666;
+      line-height: 1.8;
+      font-size: 14px;
+      margin-top: 10px;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 960px) {
+      .page { flex-direction: column; }
+      .map-panel { min-height: 50vh; }
+      #map { height: 50vh; }
+      .side-panel { width: 100%; max-height: none; }
+    }
+  </style>
+
+  <script>
+    window._AMapSecurityConfig = {
+      securityJsCode: "98b0867d627993ffb76908cfd4ff9396"
+    };
+  </script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=190fc3d95accdbf52e56216f466a3cc4"></script>
+</head>
+<body>
+
+  <div id="consentModal" class="consent-mask hidden">
+    <div class="consent-box">
+      <h2 id="consentTitle">知情同意书</h2>
+      <div class="consent-content" id="consentContent"></div>
+      <div class="option-group">
+        <label><input type="checkbox" id="consentCheck"> <span id="consentCheckText">我已阅读并理解以上内容，自愿参加本次调查</span></label>
+      </div>
+      <div class="submit-row">
+        <button class="primary" type="button" onclick="acceptConsent()" id="consentButton">同意并进入问卷</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="map-panel">
+      <div id="map"></div>
+      <div class="toolbar">
+        <button type="button" onclick="locateMe()" id="locateBtn">自动定位</button>
+        <button type="button" class="secondary" onclick="backToParkCenter()" id="backCenterBtn">回到中心</button>
+        <label class="test-toggle-wrap" for="testModeToggle">
+          <span id="testModeLabel">测试开关</span>
+          <input type="checkbox" id="testModeToggle" onchange="handleTestModeToggle(event)">
+        </label>
+        <select id="languageSwitcher" class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="zh">简体中文</option>
+        </select>
+      </div>
+    </div>
+
+    <aside class="side-panel">
+      <h1 id="pageTitle">Zhongshan Park CES Survey</h1>
+      <div class="desc" id="pageDesc"></div>
+
+      <div class="lang-note" id="langNote"></div>
+      <div class="status" id="statusBox">Status: Waiting for location</div>
+
+      <div class="display-banner" id="displayBanner">This is the GitHub Pages display version. It is for demonstrating the questionnaire content and interaction flow only. Online submission is disabled. Responses completed outside Zhongshan Park are not included in the formal study results.</div>
+
+      <div id="beforeConsentBox" class="placeholder-box"></div>
+
+      <form id="surveyForm" class="hidden">
+        <div class="field">
+          <label id="lngLabel">经度</label>
+          <input id="lng" readonly />
+        </div>
+
+        <div class="field">
+          <label id="latLabel">纬度</label>
+          <input id="lat" readonly />
+        </div>
+
+        <h2 id="secBasic">一、基本信息</h2>
+
+        <div class="field">
+          <label id="qAge">1. 您的年龄是？</label>
+          <div class="option-group">
+            <label><input type="radio" name="age" value="18岁以下 / Under 18"> <span id="age1">18岁以下</span></label>
+            <label><input type="radio" name="age" value="19-60岁 / 19-60"> <span id="age2">19-60岁</span></label>
+            <label><input type="radio" name="age" value="60岁及以上 / 60 and above"> <span id="age3">60岁及以上</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qGender">2. 您的性别是？</label>
+          <div class="option-inline">
+            <label><input type="radio" name="gender" value="男 / Male"> <span id="gender1">男</span></label>
+            <label><input type="radio" name="gender" value="女 / Female"> <span id="gender2">女</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qEducation">3. 您的受教育程度是？</label>
+          <div class="option-group">
+            <label><input type="radio" name="education" value="高中及以下 / High school or below"> <span id="edu1">高中及以下</span></label>
+            <label><input type="radio" name="education" value="大专及本科 / College or Bachelor's"> <span id="edu2">大专及本科</span></label>
+            <label><input type="radio" name="education" value="硕士及以上 / Master's or above"> <span id="edu3">硕士及以上</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qIncome">4. 您目前的月收入是？</label>
+          <div class="option-group">
+            <label><input type="radio" name="income" value="0-5000元 / RMB 0-5000"> <span id="income1">0-5000元</span></label>
+            <label><input type="radio" name="income" value="5001-10000元 / RMB 5001-10000"> <span id="income2">5001-10000元</span></label>
+            <label><input type="radio" name="income" value="10000元及以上 / RMB 10000 and above"> <span id="income3">10000元及以上</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qVisitFreq">5. 您前往公园的平均频率是？</label>
+          <div class="option-group">
+            <label><input type="radio" name="visit_frequency" value="每周不到1次或1次 / Less than once or once a week"> <span id="freq1">每周不到1次或1次</span></label>
+            <label><input type="radio" name="visit_frequency" value="每周2-5次 / 2-5 times a week"> <span id="freq2">每周2-5次</span></label>
+            <label><input type="radio" name="visit_frequency" value="每周5次及以上 / 5 times or more a week"> <span id="freq3">每周5次及以上</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qVisitPurpose">6. 您前往公园的主要目的是什么？（多选）</label>
+          <div class="option-group">
+            <label><input type="checkbox" name="visit_purpose" value="日常散步与短暂停留 / Daily walking and short stay"> <span id="vp1">日常散步与短暂停留</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="运动锻炼 / Exercise"> <span id="vp2">运动锻炼</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="陪伴儿童活动 / Accompanying children"> <span id="vp3">陪伴儿童活动</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="休闲社交与会面交流 / Leisure and social interaction"> <span id="vp4">休闲社交与会面交流</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="亲近自然与放松身心 / Contact with nature and relaxation"> <span id="vp5">亲近自然与放松身心</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="遛狗或陪伴宠物活动 / Walking dogs or staying with pets"> <span id="vp6">遛狗或陪伴宠物活动</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="欣赏/参与文化娱乐活动 / Cultural or recreational participation"> <span id="vp7">欣赏/参与文化娱乐活动</span></label>
+            <label><input type="checkbox" name="visit_purpose" value="通行或顺路经过 / Passing through"> <span id="vp8">通行或顺路经过</span></label>
+            <div class="inline-other">
+              <label><input type="checkbox" name="visit_purpose" value="其他 / Other"> <span id="other1">其他</span></label>
+              <input type="text" id="visit_purpose_other" placeholder="请填写其他内容">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qParkAttraction">7. 您认为公园最吸引您的是什么？（多选）</label>
+          <div class="option-group">
+            <label><input type="checkbox" name="park_attraction" value="优美的自然景观与生态环境 / Natural scenery and ecological environment"> <span id="pa1">优美的自然景观与生态环境</span></label>
+            <label><input type="checkbox" name="park_attraction" value="安静舒适、适合放松的氛围 / Quiet and comfortable atmosphere"> <span id="pa2">安静舒适、适合放松的氛围</span></label>
+            <label><input type="checkbox" name="park_attraction" value="鸟鸣、风声等自然声音带来的环境感受 / Natural sounds such as birdsong and wind"> <span id="pa3">鸟鸣、风声等自然声音带来的环境感受</span></label>
+            <label><input type="checkbox" name="park_attraction" value="开阔宜人的活动与交往空间 / Pleasant spaces for activity and interaction"> <span id="pa4">开阔宜人的活动与交往空间</span></label>
+            <label><input type="checkbox" name="park_attraction" value="丰富便利的运动与休闲设施 / Sports and leisure facilities"> <span id="pa5">丰富便利的运动与休闲设施</span></label>
+            <label><input type="checkbox" name="park_attraction" value="儿童活动空间或亲子友好环境 / Child-friendly space"> <span id="pa6">儿童活动空间或亲子友好环境</span></label>
+            <label><input type="checkbox" name="park_attraction" value="文化展示、游览观赏或娱乐活动氛围 / Cultural display and recreational atmosphere"> <span id="pa7">文化展示、游览观赏或娱乐活动氛围</span></label>
+            <div class="inline-other">
+              <label><input type="checkbox" name="park_attraction" value="其他 / Other"> <span id="other2">其他</span></label>
+              <input type="text" id="park_attraction_other" placeholder="请填写其他内容">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="qParkLack">8. 您认为当前公园或您经常前往的公园缺少什么？（多选）</label>
+          <div class="option-group">
+            <label><input type="checkbox" name="park_lack" value="没什么明显缺少 / Nothing obvious is lacking"> <span id="pl1">没什么明显缺少</span></label>
+            <label><input type="checkbox" name="park_lack" value="更丰富的绿化与自然植被 / More greenery and vegetation"> <span id="pl2">更丰富的绿化与自然植被</span></label>
+            <label><input type="checkbox" name="park_lack" value="鸟类、昆虫等更丰富的自然生物环境 / Richer biodiversity such as birds and insects"> <span id="pl3">鸟类、昆虫等更丰富的自然生物环境</span></label>
+            <label><input type="checkbox" name="park_lack" value="更完善的运动健身设施 / Better sports and fitness facilities"> <span id="pl4">更完善的运动健身设施</span></label>
+            <label><input type="checkbox" name="park_lack" value="休憩、儿童或日常活动设施 / Seating, children's or daily-use facilities"> <span id="pl5">休憩、儿童或日常活动设施</span></label>
+            <label><input type="checkbox" name="park_lack" value="更安静舒适的休闲氛围 / A quieter and more comfortable atmosphere"> <span id="pl6">更安静舒适的休闲氛围</span></label>
+            <label><input type="checkbox" name="park_lack" value="更有特色的文化内容 / More distinctive cultural content"> <span id="pl7">更有特色的文化内容</span></label>
+            <div class="inline-other">
+              <label><input type="checkbox" name="park_lack" value="其他 / Other"> <span id="other3">其他</span></label>
+              <input type="text" id="park_lack_other" placeholder="请填写其他内容">
+            </div>
+          </div>
+        </div>
+
+        <h2 id="secSound">二、声环境感知评估</h2>
+
+        <div class="field">
+          <label id="qSoundOverall">9. 总体来说，您如何评价当前周围的声音环境？</label>
+          <div class="scale-note" id="soundOverallNote"></div>
+          <select id="sound_overall">
+            <option value="" id="optSelect">请选择</option>
+            <option value="1" id="soundOpt1">1 很差</option>
+            <option value="2" id="soundOpt2">2 较差</option>
+            <option value="3" id="soundOpt3">3 一般</option>
+            <option value="4" id="soundOpt4">4 较好</option>
+            <option value="5" id="soundOpt5">5 很好</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label id="qSoundMatrix">10. 以下是一些用于描述当前声音环境的感知属性。请根据您此刻的真实体验，判断您在多大程度上同意以下描述。</label>
+          <div class="scale-note" id="matrixNote"></div>
+          <table class="matrix">
+            <tr>
+              <th id="matrixAttrHead">感知属性</th>
+              <th><div>5</div><div class="small" id="matrix5">非常同意</div></th>
+              <th><div>4</div><div class="small" id="matrix4">同意</div></th>
+              <th><div>3</div><div class="small" id="matrix3">一般</div></th>
+              <th><div>2</div><div class="small" id="matrix2">不同意</div></th>
+              <th><div>1</div><div class="small" id="matrix1">非常不同意</div></th>
+            </tr>
+            <tr>
+              <td id="attrPleasant">当前的声环境是愉悦的 Pleasant</td>
+              <td><input type="radio" name="sound_attr_pleasant" value="5"></td>
+              <td><input type="radio" name="sound_attr_pleasant" value="4"></td>
+              <td><input type="radio" name="sound_attr_pleasant" value="3"></td>
+              <td><input type="radio" name="sound_attr_pleasant" value="2"></td>
+              <td><input type="radio" name="sound_attr_pleasant" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrVibrant">当前的声环境是有活力的 Vibrant</td>
+              <td><input type="radio" name="sound_attr_vibrant" value="5"></td>
+              <td><input type="radio" name="sound_attr_vibrant" value="4"></td>
+              <td><input type="radio" name="sound_attr_vibrant" value="3"></td>
+              <td><input type="radio" name="sound_attr_vibrant" value="2"></td>
+              <td><input type="radio" name="sound_attr_vibrant" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrEventful">当前的声环境是有很多声事件的 Eventful</td>
+              <td><input type="radio" name="sound_attr_eventful" value="5"></td>
+              <td><input type="radio" name="sound_attr_eventful" value="4"></td>
+              <td><input type="radio" name="sound_attr_eventful" value="3"></td>
+              <td><input type="radio" name="sound_attr_eventful" value="2"></td>
+              <td><input type="radio" name="sound_attr_eventful" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrChaotic">当前的声环境是混乱的 Chaotic</td>
+              <td><input type="radio" name="sound_attr_chaotic" value="5"></td>
+              <td><input type="radio" name="sound_attr_chaotic" value="4"></td>
+              <td><input type="radio" name="sound_attr_chaotic" value="3"></td>
+              <td><input type="radio" name="sound_attr_chaotic" value="2"></td>
+              <td><input type="radio" name="sound_attr_chaotic" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrAnnoying">当前的声环境是令人烦恼的 Annoying</td>
+              <td><input type="radio" name="sound_attr_annoying" value="5"></td>
+              <td><input type="radio" name="sound_attr_annoying" value="4"></td>
+              <td><input type="radio" name="sound_attr_annoying" value="3"></td>
+              <td><input type="radio" name="sound_attr_annoying" value="2"></td>
+              <td><input type="radio" name="sound_attr_annoying" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrMonotonous">当前的声环境是单调的 Monotonous</td>
+              <td><input type="radio" name="sound_attr_monotonous" value="5"></td>
+              <td><input type="radio" name="sound_attr_monotonous" value="4"></td>
+              <td><input type="radio" name="sound_attr_monotonous" value="3"></td>
+              <td><input type="radio" name="sound_attr_monotonous" value="2"></td>
+              <td><input type="radio" name="sound_attr_monotonous" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrUneventful">当前的声环境是没什么声事件的 Uneventful</td>
+              <td><input type="radio" name="sound_attr_uneventful" value="5"></td>
+              <td><input type="radio" name="sound_attr_uneventful" value="4"></td>
+              <td><input type="radio" name="sound_attr_uneventful" value="3"></td>
+              <td><input type="radio" name="sound_attr_uneventful" value="2"></td>
+              <td><input type="radio" name="sound_attr_uneventful" value="1"></td>
+            </tr>
+            <tr>
+              <td id="attrCalm">当前的声环境是平静的 Calm</td>
+              <td><input type="radio" name="sound_attr_calm" value="5"></td>
+              <td><input type="radio" name="sound_attr_calm" value="4"></td>
+              <td><input type="radio" name="sound_attr_calm" value="3"></td>
+              <td><input type="radio" name="sound_attr_calm" value="2"></td>
+              <td><input type="radio" name="sound_attr_calm" value="1"></td>
+            </tr>
+          </table>
+        </div>
+
+        <h2 id="secCes">三、CES 效益评估</h2>
+        <div class="scale-note" id="cesNote"></div>
+
+        <div class="field">
+          <label id="ces1">1. 文化体验：在游览该公园的过程中，我能感受到其具有一定的地方特色或文化氛围。</label>
+          <select id="ces_culture">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="ces2">2. 审美体验：在游览该公园的过程中，我能够获得愉悦的景观审美体验。</label>
+          <select id="ces_aesthetic">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="ces3">3. 休闲体验：在游览该公园的过程中，我能够获得轻松愉快的体验。</label>
+          <select id="ces_leisure">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="ces4">4. 精神恢复：在游览该公园的过程中，我能够感受到平和、安静和放松。</label>
+          <select id="ces_restoration">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="ces5">5. 教育启发：在游览该公园的过程中，会激发我观察和了解自然的兴趣。</label>
+          <select id="ces_education">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="ces6">6. 社会联结：在游览该公园的过程中，我能够感受到社会活力、陪伴感与生活气息。</label>
+          <select id="ces_social">
+            <option value="" class="select-placeholder">请选择</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label id="notesLabel">补充意见</label>
+          <textarea id="notes" placeholder="可填写您对中山公园体验的补充意见"></textarea>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="primary" id="submitBtn">提交问卷</button>
+          <button type="button" class="light" onclick="exportCSV()" id="csvBtn">导出 CSV</button>
+          <button type="button" class="light" onclick="exportJSON()" id="jsonBtn">导出 JSON</button>
+          <button type="button" class="danger" onclick="clearLocalData()" id="clearBtn">清空本地数据</button>
+        </div>
+      </form>
+
+      <div class="recent">
+        <h2 id="recentTitle">本机最近备份</h2>
+        <div id="recentList">
+          <div class="recent-item" id="recentEmpty">暂无记录</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+  let map;
+  let currentLocationMarker = null;
+  let currentPosition = null;
+  let inPark = false;
+  let consentAccepted = false;
+  let currentLang = "en";
+  let statusKey = "waiting";
+  let lastAccuracy = null;
+  let lastTimestampSaved = null;
+
+  const statusBox = document.getElementById("statusBox");
+  const consentModal = document.getElementById("consentModal");
+  const surveyForm = document.getElementById("surveyForm");
+  const recentList = document.getElementById("recentList");
+  const beforeConsentBox = document.getElementById("beforeConsentBox");
+
+  const STORAGE_KEY = "zhongshan_park_ces_submissions";
+  const LANG_KEY = "zhongshan_park_ces_lang";
+  const TEST_MODE_KEY = "zhongshan_park_ces_test_mode";
+  const TEST_MODE_PASSWORD = "12416008";
+
+
+  const parkCenter = [121.600113, 38.913369];
+  let requireInPark = true;
+
+  const parkBounds = {
+    minLng: 121.59630,
+    maxLng: 121.60255,
+    minLat: 38.90995,
+    maxLat: 38.91335
+  };
+
+  const I18N = {
+    zh: {
+      title: "中山公园 CES 问卷",
+      desc: "请先点击“自动定位”。系统会判断您当前是否位于中山公园范围内。<br>定位后，无论您是否位于中山公园内，都可以继续填写展示版问卷；但位于公园外的填写结果不计入正式研究结果。",
+      langNote: "本 GitHub Pages 版本默认为英文，可随时切换为中文。语言切换会同步更新地图按钮、知情同意书、状态提示和后续问卷内容。",
+      locateBtn: "自动定位",
+      backCenterBtn: "回到中心",
+      testModeLabel: "测试开关",
+      consentTitle: "知情同意书",
+      consentContent: "您好！感谢您参与本次“中山公园文化生态系统服务（CES）感知调查”。本研究旨在了解公众在中山公园中的游憩体验、文化体验、审美体验、休闲体验、精神恢复与社会联结等感受。\n\n本问卷仅用于学术研究，不涉及商业用途。问卷采用匿名方式，不收集能够直接识别您个人身份的敏感信息。您提供的定位信息仅用于确认您当前位于中山公园范围内，以保证问卷对象与研究场地一致。\n\n您的参与完全出于自愿，您可以随时退出而不会产生任何不利影响。提交问卷即表示您已知晓本研究目的，并同意研究团队在匿名和保密前提下对数据进行统计分析与学术使用。",
+      consentCheckText: "我已阅读并理解以上内容，自愿参加本次调查",
+      consentButton: "同意并进入问卷",
+      placeholder: "当前尚未进入正式问卷。\n请先完成定位，并在弹出的知情同意书中勾选同意后进入问卷。",
+      lngLabel: "经度",
+      latLabel: "纬度",
+      secBasic: "一、基本信息",
+      qAge: "1. 您的年龄是？",
+      age1: "18岁以下",
+      age2: "19-60岁",
+      age3: "60岁及以上",
+      qGender: "2. 您的性别是？",
+      gender1: "男",
+      gender2: "女",
+      qEducation: "3. 您的受教育程度是？",
+      edu1: "高中及以下",
+      edu2: "大专及本科",
+      edu3: "硕士及以上",
+      qIncome: "4. 您目前的月收入是？",
+      income1: "0-5000元",
+      income2: "5001-10000元",
+      income3: "10000元及以上",
+      qVisitFreq: "5. 您前往公园的平均频率是？",
+      freq1: "每周不到1次或1次",
+      freq2: "每周2-5次",
+      freq3: "每周5次及以上",
+      qVisitPurpose: "6. 您前往公园的主要目的是什么？（多选）",
+      vp1: "日常散步与短暂停留",
+      vp2: "运动锻炼",
+      vp3: "陪伴儿童活动",
+      vp4: "休闲社交与会面交流",
+      vp5: "亲近自然与放松身心",
+      vp6: "遛狗或陪伴宠物活动",
+      vp7: "欣赏/参与文化娱乐活动",
+      vp8: "通行或顺路经过",
+      other: "其他",
+      otherPlaceholder: "请填写其他内容",
+      qParkAttraction: "7. 您认为公园最吸引您的是什么？（多选）",
+      pa1: "优美的自然景观与生态环境",
+      pa2: "安静舒适、适合放松的氛围",
+      pa3: "鸟鸣、风声等自然声音带来的环境感受",
+      pa4: "开阔宜人的活动与交往空间",
+      pa5: "丰富便利的运动与休闲设施",
+      pa6: "儿童活动空间或亲子友好环境",
+      pa7: "文化展示、游览观赏或娱乐活动氛围",
+      qParkLack: "8. 您认为当前公园或您经常前往的公园缺少什么？（多选）",
+      pl1: "没什么明显缺少",
+      pl2: "更丰富的绿化与自然植被",
+      pl3: "鸟类、昆虫等更丰富的自然生物环境",
+      pl4: "更完善的运动健身设施",
+      pl5: "休憩、儿童或日常活动设施",
+      pl6: "更安静舒适的休闲氛围",
+      pl7: "更有特色的文化内容",
+      secSound: "二、声环境感知评估",
+      qSoundOverall: "9. 总体来说，您如何评价当前周围的声音环境？",
+      soundOverallNote: "1 = 很差，2 = 较差，3 = 一般，4 = 较好，5 = 很好。",
+      select: "请选择",
+      soundOpt1: "1 很差",
+      soundOpt2: "2 较差",
+      soundOpt3: "3 一般",
+      soundOpt4: "4 较好",
+      soundOpt5: "5 很好",
+      qSoundMatrix: "10. 以下是一些用于描述当前声音环境的感知属性。请根据您此刻的真实体验，判断您在多大程度上同意以下描述。",
+      matrixNote: "双极量表说明：从左到右依次为 +3、+2、+1、0、-1、-2、-3。<br>左侧为正向描述，右侧为对应反向描述。",
+      matrixAttrHead: "感知属性",
+
+      matrix5: "非常同意",
+      matrix4: "同意",
+      matrix3: "一般",
+      matrix2: "不同意",
+      matrix1: "非常不同意",
+      attrPleasant: "当前的声环境是愉悦的 Pleasant",
+      attrVibrant: "当前的声环境是有活力的 Vibrant",
+      attrEventful: "当前的声环境是有很多声事件的 Eventful",
+      attrChaotic: "当前的声环境是混乱的 Chaotic",
+      attrAnnoying: "当前的声环境是令人烦恼的 Annoying",
+      attrMonotonous: "当前的声环境是单调的 Monotonous",
+      attrUneventful: "当前的声环境是没什么声事件的 Uneventful",
+      attrCalm: "当前的声环境是平静的 Calm",
+      secCes: "三、CES 效益评估",
+      cesNote: "7级里克特量表说明：1 = 非常不同意，2 = 不同意，3 = 略不同意，4 = 一般，5 = 略同意，6 = 同意，7 = 非常同意。",
+      ces1: "1. 文化体验：在游览该公园的过程中，我能感受到其具有一定的地方特色或文化氛围。",
+      ces2: "2. 审美体验：在游览该公园的过程中，我能够获得愉悦的景观审美体验。",
+      ces3: "3. 休闲体验：在游览该公园的过程中，我能够获得轻松愉快的体验。",
+      ces4: "4. 精神恢复：在游览该公园的过程中，我能够感受到平和、安静和放松。",
+      ces5: "5. 教育启发：在游览该公园的过程中，会激发我观察和了解自然的兴趣。",
+      ces6: "6. 社会联结：在游览该公园的过程中，我能够感受到社会活力、陪伴感与生活气息。",
+      notesLabel: "补充意见",
+      notesPlaceholder: "可填写您对中山公园体验的补充意见",
+      submitBtn: "展示版（不提交）",
+      csvBtn: "导出 CSV",
+      jsonBtn: "导出 JSON",
+      clearBtn: "清空本地数据",
+      recentTitle: "本机最近备份",
+      recentEmpty: "暂无记录",
+      recentTime: "时间戳",
+      recentDone: "完成时间",
+      recentCoord: "坐标",
+      recentAge: "年龄",
+      alerts: {
+        noGeolocation: "当前状态：浏览器不支持定位",
+        requesting: "当前状态：正在请求定位，请允许浏览器访问位置...",
+        inPark: (acc) => `当前状态：定位成功，已完成坐标转换，您当前位于中山公园范围内（定位精度约 ${Math.round(acc)} 米），请签署知情同意书`,
+        outParkReq: (acc) => `当前状态：定位成功，已完成坐标转换。您当前不在中山公园范围内（定位精度约 ${Math.round(acc)} 米），但仍可继续填写展示版问卷；该样本不计入正式研究结果。`,
+        outParkTest: (acc) => `当前状态：定位成功，已完成坐标转换。您当前不在中山公园范围内（定位精度约 ${Math.round(acc)} 米），仍可签署知情同意书并继续填写展示版问卷；该样本不计入正式研究结果。`,
+        deny: "当前状态：定位失败，您拒绝了定位权限",
+        unavailable: "当前状态：定位失败，暂时无法获取位置信息",
+        timeout: "当前状态：定位失败，定位请求超时",
+        fail: "当前状态：定位失败，请检查浏览器权限",
+        testing: "当前状态：展示版默认允许在中山公园外填写，但公园外样本不计入正式研究结果。",
+        formReady: "当前状态：已同意知情同意书，请继续填写问卷。若您位于中山公园外，该样本不计入正式研究结果。",
+        saved: (ts) => `当前状态：问卷已保存，时间戳 ${ts}`,
+        waiting: "当前状态：等待定位"
+      },
+      dialogs: {
+        needCheck: "请先勾选同意参加调查",
+        noData: "当前没有可导出的数据",
+        confirmClear: "确定要清空本机已保存的所有问卷数据吗？",
+        cleared: "本机数据已清空",
+        pleaseLocate: "请先定位",
+        notInPark: "当前不在中山公园范围内，但仍可继续填写展示版问卷；该样本不计入正式研究结果。",
+        consentFirst: "请先阅读并同意知情同意书",
+        saved: (ts) => `问卷已保存到 CloudBase 云端，并已在本机保留备份。\n时间戳：${ts}`,
+        cloudNotConfigured: "当前页面尚未填写 CloudBase 环境 ID，暂时只能保存在本机。",
+        cloudInitFailed: "CloudBase 初始化失败，问卷已保存在本机备份，请检查环境 ID、安全域名和匿名登录设置。",
+        cloudSubmitFailedLocalSaved: "云端提交失败，问卷已自动保存在本机备份。请检查网络、数据库权限和 CloudBase 配置。",
+        testModeOn: "测试模式已开启",
+        testModeOff: "测试模式已关闭",
+        enterPassword: "请输入测试模式密码",
+        wrongPassword: "密码错误",
+        displayOnly: "当前为 GitHub Pages 展示版，仅用于展示问卷内容与交互流程，不执行在线提交。位于中山公园外的填写结果不计入正式研究结果。"
+      }
+    },
+    en: {
+      title: "Zhongshan Park CES Survey",
+      desc: "Please click “Locate Me” first. The system will check whether you are currently within Zhongshan Park.<br>After location, you may continue with this display-version questionnaire whether you are inside the park or not; responses completed outside Zhongshan Park are not included in the formal study results.",
+      langNote: "This GitHub Pages version defaults to English, and you may switch to Chinese at any time. Switching language will also update the map buttons, consent form, status messages, and the questionnaire below.",
+      locateBtn: "Locate Me",
+      backCenterBtn: "Back to Center",
+      testModeLabel: "Test Mode",
+      consentTitle: "Informed Consent",
+      consentContent: "Hello! Thank you for participating in this survey on Cultural Ecosystem Services (CES) in Zhongshan Park. This study aims to understand visitors’ recreational experience, cultural experience, aesthetic experience, leisure experience, mental restoration, and social connection in Zhongshan Park.\n\nThis questionnaire is for academic research only and will not be used for commercial purposes. The survey is anonymous and does not collect personally identifiable sensitive information. Your location information is used only to confirm whether you are currently within Zhongshan Park, so as to ensure consistency between respondents and the study site.\n\nYour participation is entirely voluntary, and you may withdraw at any time without any negative consequence. By submitting the questionnaire, you acknowledge that you understand the purpose of this study and agree that the research team may use the data anonymously and confidentially for statistical analysis and academic research.",
+      consentCheckText: "I have read and understood the above information and voluntarily agree to participate in this survey",
+      consentButton: "Agree and Continue",
+      placeholder: "You have not entered the formal questionnaire yet.\nPlease complete location first, then check the consent box in the pop-up window to continue.",
+      lngLabel: "Longitude",
+      latLabel: "Latitude",
+      secBasic: "I. Basic Information",
+      qAge: "1. What is your age?",
+      age1: "Under 18",
+      age2: "19-60",
+      age3: "60 and above",
+      qGender: "2. What is your gender?",
+      gender1: "Male",
+      gender2: "Female",
+      qEducation: "3. What is your highest level of education?",
+      edu1: "High school or below",
+      edu2: "College or Bachelor's",
+      edu3: "Master's or above",
+      qIncome: "4. What is your current monthly income?",
+      income1: "RMB 0-5000",
+      income2: "RMB 5001-10000",
+      income3: "RMB 10000 and above",
+      qVisitFreq: "5. How often do you usually visit parks?",
+      freq1: "Less than once or once a week",
+      freq2: "2-5 times a week",
+      freq3: "5 times or more a week",
+      qVisitPurpose: "6. What are your main purposes for visiting the park? (Multiple choice)",
+      vp1: "Daily walking and short stay",
+      vp2: "Exercise",
+      vp3: "Accompanying children",
+      vp4: "Leisure and social interaction",
+      vp5: "Contact with nature and relaxation",
+      vp6: "Walking dogs or staying with pets",
+      vp7: "Cultural or recreational participation",
+      vp8: "Passing through",
+      other: "Other",
+      otherPlaceholder: "Please specify",
+      qParkAttraction: "7. What do you find most attractive about the park? (Multiple choice)",
+      pa1: "Natural scenery and ecological environment",
+      pa2: "Quiet and comfortable atmosphere",
+      pa3: "Natural sounds such as birdsong and wind",
+      pa4: "Pleasant spaces for activity and interaction",
+      pa5: "Sports and leisure facilities",
+      pa6: "Child-friendly space",
+      pa7: "Cultural display and recreational atmosphere",
+      qParkLack: "8. What do you think is lacking in the current park or the park you often visit? (Multiple choice)",
+      pl1: "Nothing obvious is lacking",
+      pl2: "More greenery and vegetation",
+      pl3: "Richer biodiversity such as birds and insects",
+      pl4: "Better sports and fitness facilities",
+      pl5: "Seating, children's or daily-use facilities",
+      pl6: "A quieter and more comfortable atmosphere",
+      pl7: "More distinctive cultural content",
+      secSound: "II. Sound Environment Perception",
+      qSoundOverall: "9. Overall, how would you rate the current surrounding sound environment?",
+      soundOverallNote: "1 = Very poor, 2 = Poor, 3 = Neutral, 4 = Good, 5 = Very good.",
+      select: "Please select",
+      soundOpt1: "1 Very poor",
+      soundOpt2: "2 Poor",
+      soundOpt3: "3 Neutral",
+      soundOpt4: "4 Good",
+      soundOpt5: "5 Very good",
+      qSoundMatrix: "10. The following items are perceptual attributes used to describe the current sound environment. Based on your present experience, please indicate the extent to which you agree with each statement.",
+      matrixNote: "Five-point scale: 5 = Strongly agree, 4 = Agree, 3 = Neutral, 2 = Disagree, 1 = Strongly disagree.<br>This question collects ratings for the eight ISO soundscape perceptual attributes.",
+      matrixAttrHead: "Perceptual attribute",
+
+      matrix5: "Strongly agree",
+      matrix4: "Agree",
+      matrix3: "Neutral",
+      matrix2: "Disagree",
+      matrix1: "Strongly disagree",
+      attrPleasant: "The current sound environment is Pleasant",
+      attrVibrant: "The current sound environment is Vibrant",
+      attrEventful: "The current sound environment is Eventful",
+      attrChaotic: "The current sound environment is Chaotic",
+      attrAnnoying: "The current sound environment is Annoying",
+      attrMonotonous: "The current sound environment is Monotonous",
+      attrUneventful: "The current sound environment is Uneventful",
+      attrCalm: "The current sound environment is Calm",
+      secCes: "III. CES Benefit Evaluation",
+      cesNote: "7-point Likert scale: 1 = Strongly disagree, 2 = Disagree, 3 = Slightly disagree, 4 = Neutral, 5 = Slightly agree, 6 = Agree, 7 = Strongly agree.",
+      ces1: "1. Cultural experience: During my visit to the park, I can perceive a certain local character or cultural atmosphere.",
+      ces2: "2. Aesthetic experience: During my visit to the park, I can gain a pleasant landscape aesthetic experience.",
+      ces3: "3. Leisure experience: During my visit to the park, I can obtain a relaxed and enjoyable experience.",
+      ces4: "4. Mental restoration: During my visit to the park, I can feel peace, quietness, and relaxation.",
+      ces5: "5. Education and inspiration: During my visit to the park, it stimulates my interest in observing and understanding nature.",
+      ces6: "6. Social connection: During my visit to the park, I can feel social vitality, companionship, and a sense of everyday life.",
+      notesLabel: "Additional comments",
+      notesPlaceholder: "You may write any additional comments about your experience in Zhongshan Park",
+      submitBtn: "Display Version (No Submit)",
+      csvBtn: "Export CSV",
+      jsonBtn: "Export JSON",
+      clearBtn: "Clear Local Data",
+      recentTitle: "Recent Local Backups",
+      recentEmpty: "No records yet",
+      recentTime: "Timestamp",
+      recentDone: "Completed at",
+      recentCoord: "Coordinates",
+      recentAge: "Age",
+      alerts: {
+        noGeolocation: "Status: This browser does not support geolocation",
+        requesting: "Status: Requesting location. Please allow browser access to your location...",
+        inPark: (acc) => `Status: Location acquired and coordinate conversion completed. You are currently within Zhongshan Park (accuracy about ${Math.round(acc)} m). Please sign the informed consent form.`,
+        outParkReq: (acc) => `Status: Location acquired and coordinate conversion completed. You are currently outside Zhongshan Park (accuracy about ${Math.round(acc)} m), but you may still continue with this display-version questionnaire; this response is not included in the formal study results.`,
+        outParkTest: (acc) => `Status: Location acquired and coordinate conversion completed. You are currently outside Zhongshan Park (accuracy about ${Math.round(acc)} m). You may still sign the informed consent form and continue with this display-version questionnaire; this response is not included in the formal study results.`,
+        deny: "Status: Location failed because permission was denied",
+        unavailable: "Status: Location failed because the position is unavailable",
+        timeout: "Status: Location failed because the request timed out",
+        fail: "Status: Location failed. Please check browser permissions",
+        testing: "Status: The display version allows completion outside Zhongshan Park by default, but responses from outside the park are not included in the formal study results.",
+        formReady: "Status: Consent accepted. Please continue with the questionnaire. If you are outside Zhongshan Park, this response is not included in the formal study results.",
+        saved: (ts) => `Status: Survey saved. Timestamp ${ts}`,
+        waiting: "Status: Waiting for location"
+      },
+      dialogs: {
+        needCheck: "Please check the consent box first",
+        noData: "There is currently no data to export",
+        confirmClear: "Are you sure you want to clear all locally saved survey data on this device?",
+        cleared: "Local data has been cleared",
+        pleaseLocate: "Please complete location first",
+        notInPark: "You are currently outside Zhongshan Park, but you may still continue with this display-version questionnaire; the response is not included in the formal study results.",
+        consentFirst: "Please read and agree to the informed consent first",
+        saved: (ts) => `Survey uploaded to CloudBase and backed up on this device.\nTimestamp: ${ts}`,
+        cloudNotConfigured: "CloudBase env ID is not filled in yet, so data can only be saved locally for now.",
+        cloudInitFailed: "CloudBase initialization failed. The survey has been backed up locally. Please check the env ID, safe domain, and anonymous login settings.",
+        cloudSubmitFailedLocalSaved: "Cloud upload failed. The survey has been backed up locally. Please check the network, database permissions, and CloudBase configuration.",
+        testModeOn: "Test mode enabled",
+        testModeOff: "Test mode disabled",
+        enterPassword: "Please enter the test-mode password",
+        wrongPassword: "Wrong password",
+        displayOnly: "This is the GitHub Pages display version. It is for demonstrating the questionnaire content and interaction flow only. Online submission is disabled. Responses completed outside Zhongshan Park are not included in the formal study results."
+      }
+    }
+  };
+
+  const PI = Math.PI;
+  const AXIS = 6378245.0;
+  const OFFSET = 0.00669342162296594323;
+
+  function t(key) {
+    const parts = key.split(".");
+    let obj = I18N[currentLang];
+    for (const part of parts) obj = obj[part];
+    return obj;
+  }
+
+  function setStatusByKey(key, extra = null) {
+    statusKey = key;
+    if (extra !== null) lastAccuracy = extra;
+    let text;
+    const msg = I18N[currentLang].alerts[key];
+    if (typeof msg === "function") {
+      text = msg(extra);
+    } else {
+      text = msg;
+    }
+    statusBox.innerHTML = text;
+  }
+
+  function updateDynamicStatus() {
+    if (["inPark", "outParkReq", "outParkTest"].includes(statusKey) && lastAccuracy !== null) {
+      setStatusByKey(statusKey, lastAccuracy);
+    } else if (statusKey === "saved" && lastTimestampSaved) {
+      statusBox.innerHTML = I18N[currentLang].alerts.saved(lastTimestampSaved);
+    } else {
+      setStatusByKey(statusKey);
+    }
+  }
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+
+    const mapText = {
+      pageTitle: t("title"),
+      pageDesc: t("desc"),
+      langNote: t("langNote"),
+      locateBtn: t("locateBtn"),
+      backCenterBtn: t("backCenterBtn"),
+      testModeLabel: t("testModeLabel"),
+      consentTitle: t("consentTitle"),
+      consentContent: t("consentContent"),
+      consentCheckText: t("consentCheckText"),
+      consentButton: t("consentButton"),
+      beforeConsentBox: t("placeholder"),
+      lngLabel: t("lngLabel"),
+      latLabel: t("latLabel"),
+      secBasic: t("secBasic"),
+      qAge: t("qAge"),
+      age1: t("age1"),
+      age2: t("age2"),
+      age3: t("age3"),
+      qGender: t("qGender"),
+      gender1: t("gender1"),
+      gender2: t("gender2"),
+      qEducation: t("qEducation"),
+      edu1: t("edu1"),
+      edu2: t("edu2"),
+      edu3: t("edu3"),
+      qIncome: t("qIncome"),
+      income1: t("income1"),
+      income2: t("income2"),
+      income3: t("income3"),
+      qVisitFreq: t("qVisitFreq"),
+      freq1: t("freq1"),
+      freq2: t("freq2"),
+      freq3: t("freq3"),
+      qVisitPurpose: t("qVisitPurpose"),
+      vp1: t("vp1"),
+      vp2: t("vp2"),
+      vp3: t("vp3"),
+      vp4: t("vp4"),
+      vp5: t("vp5"),
+      vp6: t("vp6"),
+      vp7: t("vp7"),
+      vp8: t("vp8"),
+      qParkAttraction: t("qParkAttraction"),
+      pa1: t("pa1"),
+      pa2: t("pa2"),
+      pa3: t("pa3"),
+      pa4: t("pa4"),
+      pa5: t("pa5"),
+      pa6: t("pa6"),
+      pa7: t("pa7"),
+      qParkLack: t("qParkLack"),
+      pl1: t("pl1"),
+      pl2: t("pl2"),
+      pl3: t("pl3"),
+      pl4: t("pl4"),
+      pl5: t("pl5"),
+      pl6: t("pl6"),
+      pl7: t("pl7"),
+      secSound: t("secSound"),
+      qSoundOverall: t("qSoundOverall"),
+      soundOverallNote: t("soundOverallNote"),
+      optSelect: t("select"),
+      soundOpt1: t("soundOpt1"),
+      soundOpt2: t("soundOpt2"),
+      soundOpt3: t("soundOpt3"),
+      soundOpt4: t("soundOpt4"),
+      soundOpt5: t("soundOpt5"),
+      qSoundMatrix: t("qSoundMatrix"),
+      matrixNote: t("matrixNote"),
+      matrixAttrHead: t("matrixAttrHead"),
+      matrix5: t("matrix5"),
+      matrix4: t("matrix4"),
+      matrix3: t("matrix3"),
+      matrix2: t("matrix2"),
+      matrix1: t("matrix1"),
+      attrPleasant: t("attrPleasant"),
+      attrVibrant: t("attrVibrant"),
+      attrEventful: t("attrEventful"),
+      attrChaotic: t("attrChaotic"),
+      attrAnnoying: t("attrAnnoying"),
+      attrMonotonous: t("attrMonotonous"),
+      attrUneventful: t("attrUneventful"),
+      attrCalm: t("attrCalm"),
+      secCes: t("secCes"),
+      cesNote: t("cesNote"),
+      ces1: t("ces1"),
+      ces2: t("ces2"),
+      ces3: t("ces3"),
+      ces4: t("ces4"),
+      ces5: t("ces5"),
+      ces6: t("ces6"),
+      notesLabel: t("notesLabel"),
+      submitBtn: t("submitBtn"),
+      csvBtn: t("csvBtn"),
+      jsonBtn: t("jsonBtn"),
+      clearBtn: t("clearBtn"),
+      recentTitle: t("recentTitle"),
+      displayBanner: t("dialogs.displayOnly")
+    };
+
+    Object.entries(mapText).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === "pageDesc" || id === "matrixNote" || id === "soundOverallNote" || id === "langNote") {
+        el.innerHTML = value;
+      } else if (id === "consentContent" || id === "beforeConsentBox") {
+        el.textContent = value;
+      } else {
+        el.textContent = value;
+      }
+    });
+
+    document.querySelectorAll(".select-placeholder").forEach(el => el.textContent = t("select"));
+    document.getElementById("visit_purpose_other").placeholder = t("otherPlaceholder");
+    document.getElementById("park_attraction_other").placeholder = t("otherPlaceholder");
+    document.getElementById("park_lack_other").placeholder = t("otherPlaceholder");
+    document.getElementById("notes").placeholder = t("notesPlaceholder");
+    document.getElementById("other1").textContent = t("other");
+    document.getElementById("other2").textContent = t("other");
+    document.getElementById("other3").textContent = t("other");
+
+    document.title = lang === "zh" ? "中山公园 CES 问卷" : "Zhongshan Park CES Survey";
+    document.getElementById("languageSwitcher").value = lang;
+    syncTestModeUI();
+
+    updateDynamicStatus();
+    renderRecentList();
+  }
+
+  function pointInPark(lng, lat) {
+    return (
+      lng >= parkBounds.minLng &&
+      lng <= parkBounds.maxLng &&
+      lat >= parkBounds.minLat &&
+      lat <= parkBounds.maxLat
+    );
+  }
+
+
+  function isTestMode() {
+    return !requireInPark;
+  }
+
+  function syncTestModeUI() {
+    const toggle = document.getElementById("testModeToggle");
+    if (toggle) {
+      toggle.checked = isTestMode();
+    }
+  }
+
+  function applyTestModeState(enabled, shouldNotify = false) {
+    requireInPark = !enabled;
+    localStorage.setItem(TEST_MODE_KEY, enabled ? "1" : "0");
+    syncTestModeUI();
+
+    if (shouldNotify) {
+      alert(enabled ? t("dialogs.testModeOn") : t("dialogs.testModeOff"));
+    }
+
+    if (currentPosition) {
+      if (inPark) {
+        setStatusByKey("inPark", currentPosition.accuracy);
+      } else if (requireInPark) {
+        setStatusByKey("outParkReq", currentPosition.accuracy);
+      } else {
+        setStatusByKey("outParkTest", currentPosition.accuracy);
+      }
+    } else if (enabled) {
+      setStatusByKey("testing");
+    } else {
+      setStatusByKey("waiting");
+    }
+  }
+
+  function handleTestModeToggle(event) {
+    const toggle = event.target;
+    const targetEnabled = toggle.checked;
+    const password = window.prompt(t("dialogs.enterPassword"), "");
+
+    if (password === null) {
+      syncTestModeUI();
+      return;
+    }
+
+    if (password !== TEST_MODE_PASSWORD) {
+      alert(t("dialogs.wrongPassword"));
+      syncTestModeUI();
+      return;
+    }
+
+    applyTestModeState(targetEnabled, true);
+  }
+
+  function outOfChina(lng, lat) {
+    return lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+  }
+
+  function transformLat(x, y) {
+    let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(y * PI) + 40.0 * Math.sin(y / 3.0 * PI)) * 2.0 / 3.0;
+    ret += (160.0 * Math.sin(y / 12.0 * PI) + 320 * Math.sin(y * PI / 30.0)) * 2.0 / 3.0;
+    return ret;
+  }
+
+  function transformLng(x, y) {
+    let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(x * PI) + 40.0 * Math.sin(x / 3.0 * PI)) * 2.0 / 3.0;
+    ret += (150.0 * Math.sin(x / 12.0 * PI) + 300.0 * Math.sin(x / 30.0 * PI)) * 2.0 / 3.0;
+    return ret;
+  }
+
+  function wgs84ToGcj02(lng, lat) {
+    if (outOfChina(lng, lat)) {
+      return [lng, lat];
+    }
+
+    let dLat = transformLat(lng - 105.0, lat - 35.0);
+    let dLng = transformLng(lng - 105.0, lat - 35.0);
+    const radLat = lat / 180.0 * PI;
+    let magic = Math.sin(radLat);
+    magic = 1 - OFFSET * magic * magic;
+    const sqrtMagic = Math.sqrt(magic);
+
+    dLat = (dLat * 180.0) / ((AXIS * (1 - OFFSET)) / (magic * sqrtMagic) * PI);
+    dLng = (dLng * 180.0) / (AXIS / sqrtMagic * Math.cos(radLat) * PI);
+
+    const mgLat = lat + dLat;
+    const mgLng = lng + dLng;
+    return [mgLng, mgLat];
+  }
+
+  function getRadioValue(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : "";
+  }
+
+  function getCheckboxValues(name) {
+    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
+  }
+
+  function appendOtherIfChecked(values, otherInputId) {
+    const otherInput = document.getElementById(otherInputId).value.trim();
+    const isOtherSelected = values.some(v => v.includes("Other") || v.includes("其他"));
+    if (isOtherSelected && otherInput) {
+      return values.map(v => (v.includes("Other") || v.includes("其他")) ? `Other/其他: ${otherInput}` : v);
+    }
+    return values;
+  }
+
+  function getStoredData() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveStoredData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function formatTimestamp(dateObj = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = dateObj.getFullYear();
+    const m = pad(dateObj.getMonth() + 1);
+    const d = pad(dateObj.getDate());
+    const hh = pad(dateObj.getHours());
+    const mm = pad(dateObj.getMinutes());
+    const ss = pad(dateObj.getSeconds());
+    return `${y}${m}${d}_${hh}${mm}${ss}`;
+  }
+
+  function formatReadableTime(dateObj = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = dateObj.getFullYear();
+    const m = pad(dateObj.getMonth() + 1);
+    const d = pad(dateObj.getDate());
+    const hh = pad(dateObj.getHours());
+    const mm = pad(dateObj.getMinutes());
+    const ss = pad(dateObj.getSeconds());
+    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+  }
+
+  function downloadFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function convertToCSV(rows) {
+    if (!rows.length) return "";
+    const headers = Object.keys(rows[0]);
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return "";
+      const str = typeof value === "string" ? value : JSON.stringify(value);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+    const lines = [
+      headers.join(","),
+      ...rows.map(row => headers.map(h => escapeCSV(row[h])).join(","))
+    ];
+    return lines.join("\n");
+  }
+
+  function exportCSV() {
+    alert(t("dialogs.displayOnly"));
+  }
+
+  function exportJSON() {
+    alert(t("dialogs.displayOnly"));
+  }
+
+  function clearLocalData() {
+    alert(t("dialogs.displayOnly"));
+  }
+
+
+  function renderRecentList() {
+    const data = getStoredData();
+    if (!data.length) {
+      recentList.innerHTML = `<div class="recent-item">${t("recentEmpty")}</div>`;
+      return;
+    }
+    const latest = data.slice(-5).reverse();
+    recentList.innerHTML = latest.map(item => `
+      <div class="recent-item">
+        <div><strong>${t("recentTime")}：${item.submit_timestamp || "-"}</strong></div>
+        <div>${t("recentDone")}：${item.completed_at || "-"}</div>
+        <div>${t("recentCoord")}：${Number(item.lng).toFixed(6)}, ${Number(item.lat).toFixed(6)}</div>
+        <div>${t("recentAge")}：${item.age || "-"}</div>
+      </div>
+    `).join("");
+  }
+
+  function initMap() {
+    map = new AMap.Map("map", {
+      zoom: 17,
+      center: parkCenter,
+      viewMode: "2D"
+    });
+
+    new AMap.Marker({
+      map,
+      position: parkCenter,
+      title: "Zhongshan Park Center"
+    });
+
+    renderRecentList();
+
+    const savedTestModeValue = localStorage.getItem(TEST_MODE_KEY);
+    const savedTestMode = savedTestModeValue === null ? true : savedTestModeValue === "1";
+
+    if (savedTestModeValue === null) {
+      localStorage.setItem(TEST_MODE_KEY, "1");
+    }
+
+    requireInPark = !savedTestMode;
+    syncTestModeUI();
+
+    const savedLang = localStorage.getItem(LANG_KEY) || "en";
+    setLanguage(savedLang);
+
+    if (savedTestMode) {
+      statusKey = "testing";
+      updateDynamicStatus();
+    }
+  }
+
+  function backToParkCenter() {
+    map.setCenter(parkCenter);
+    map.setZoom(17);
+  }
+
+  function locateMe() {
+    if (!navigator.geolocation) {
+      setStatusByKey("noGeolocation");
+      return;
+    }
+
+    setStatusByKey("requesting");
+
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const rawLng = position.coords.longitude;
+        const rawLat = position.coords.latitude;
+        const [gcjLng, gcjLat] = wgs84ToGcj02(rawLng, rawLat);
+        const accuracy = position.coords.accuracy;
+
+        currentPosition = {
+          lng: gcjLng,
+          lat: gcjLat,
+          raw_lng: rawLng,
+          raw_lat: rawLat,
+          accuracy: accuracy
+        };
+
+        inPark = pointInPark(gcjLng, gcjLat);
+
+        document.getElementById("lng").value = gcjLng.toFixed(6);
+        document.getElementById("lat").value = gcjLat.toFixed(6);
+
+        if (!currentLocationMarker) {
+          currentLocationMarker = new AMap.Marker({
+            position: [gcjLng, gcjLat],
+            title: "Current Location",
+            label: { content: currentLang === "zh" ? "当前位置" : "Current location", direction: "top" }
+          });
+          map.add(currentLocationMarker);
+        } else {
+          currentLocationMarker.setPosition([gcjLng, gcjLat]);
+          currentLocationMarker.setLabel({ content: currentLang === "zh" ? "当前位置" : "Current location", direction: "top" });
+        }
+
+        map.setCenter([gcjLng, gcjLat]);
+        map.setZoom(18);
+
+        if (inPark) {
+          setStatusByKey("inPark", accuracy);
+          consentModal.classList.remove("hidden");
+        } else {
+          if (requireInPark) {
+            setStatusByKey("outParkReq", accuracy);
+          } else {
+            setStatusByKey("outParkTest", accuracy);
+            consentModal.classList.remove("hidden");
+          }
+        }
+      },
+      function(error) {
+        let key = "fail";
+        if (error.code === 1) key = "deny";
+        if (error.code === 2) key = "unavailable";
+        if (error.code === 3) key = "timeout";
+        setStatusByKey(key);
+        console.error(error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  }
+
+  function acceptConsent() {
+    if (!document.getElementById("consentCheck").checked) {
+      alert(t("dialogs.needCheck"));
+      return;
+    }
+    consentAccepted = true;
+    consentModal.classList.add("hidden");
+    beforeConsentBox.classList.add("hidden");
+    surveyForm.classList.remove("hidden");
+    setStatusByKey("formReady");
+  }
+
+  surveyForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    if (!currentPosition) {
+      alert(t("dialogs.pleaseLocate"));
+      return;
+    }
+
+    if (requireInPark && !inPark) {
+      alert(t("dialogs.notInPark"));
+      return;
+    }
+
+    if (!consentAccepted) {
+      alert(t("dialogs.consentFirst"));
+      return;
+    }
+
+    const now = new Date();
+    const submitTimestamp = formatTimestamp(now);
+    const completedAt = formatReadableTime(now);
+
+    let visitPurpose = getCheckboxValues("visit_purpose");
+    let parkAttraction = getCheckboxValues("park_attraction");
+    let parkLack = getCheckboxValues("park_lack");
+
+    visitPurpose = appendOtherIfChecked(visitPurpose, "visit_purpose_other");
+    parkAttraction = appendOtherIfChecked(parkAttraction, "park_attraction_other");
+    parkLack = appendOtherIfChecked(parkLack, "park_lack_other");
+
+    const payload = {
+      id: submitTimestamp,
+      submit_timestamp: submitTimestamp,
+      completed_at: completedAt,
+      ui_language: currentLang,
+      lng: currentPosition.lng,
+      lat: currentPosition.lat,
+      raw_lng: currentPosition.raw_lng,
+      raw_lat: currentPosition.raw_lat,
+      accuracy_m: currentPosition.accuracy,
+      in_park: inPark,
+      test_mode: isTestMode(),
+      consent: consentAccepted,
+
+      age: getRadioValue("age"),
+      gender: getRadioValue("gender"),
+      education: getRadioValue("education"),
+      income: getRadioValue("income"),
+      visit_frequency: getRadioValue("visit_frequency"),
+
+      visit_purpose: visitPurpose,
+      visit_purpose_other: document.getElementById("visit_purpose_other").value.trim(),
+      park_attraction: parkAttraction,
+      park_attraction_other: document.getElementById("park_attraction_other").value.trim(),
+      park_lack: parkLack,
+      park_lack_other: document.getElementById("park_lack_other").value.trim(),
+
+      sound_overall: document.getElementById("sound_overall").value,
+      sound_attr_pleasant: getRadioValue("sound_attr_pleasant"),
+      sound_attr_vibrant: getRadioValue("sound_attr_vibrant"),
+      sound_attr_eventful: getRadioValue("sound_attr_eventful"),
+      sound_attr_chaotic: getRadioValue("sound_attr_chaotic"),
+      sound_attr_annoying: getRadioValue("sound_attr_annoying"),
+      sound_attr_monotonous: getRadioValue("sound_attr_monotonous"),
+      sound_attr_uneventful: getRadioValue("sound_attr_uneventful"),
+      sound_attr_calm: getRadioValue("sound_attr_calm"),
+      included_in_formal_results: inPark,
+
+      ces_culture: document.getElementById("ces_culture").value,
+      ces_aesthetic: document.getElementById("ces_aesthetic").value,
+      ces_leisure: document.getElementById("ces_leisure").value,
+      ces_restoration: document.getElementById("ces_restoration").value,
+      ces_education: document.getElementById("ces_education").value,
+      ces_social: document.getElementById("ces_social").value,
+      notes: document.getElementById("notes").value.trim()
+    };
+
+    console.log("Display-only payload preview:", payload);
+    lastTimestampSaved = submitTimestamp;
+    statusKey = "saved";
+    alert(t("dialogs.displayOnly"));
+
+    surveyForm.reset();
+    consentAccepted = false;
+    document.getElementById("consentCheck").checked = false;
+
+    surveyForm.classList.add("hidden");
+    beforeConsentBox.classList.remove("hidden");
+
+    renderRecentList();
+    updateDynamicStatus();
+  });
+
+  initMap();
+  </script>
+</body>
+</html>
